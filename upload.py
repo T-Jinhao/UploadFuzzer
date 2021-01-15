@@ -22,7 +22,8 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             pass
         else:    # 正常上传
-            files = self.setFiles()
+            F = self.getFileContent(self.args.f)
+            files = {self.args.param: F}
             self.upload(files)
 
 
@@ -35,14 +36,11 @@ class UPLOAD:
             print('获取文件后缀名失败')
             sys.exit()
 
-    def setFiles(self):
+    def getFileContent(self, file):
         # 获取文件内容
         try:
-            with open(self.args.f, 'rb') as F:
-                files = {
-                    self.args.param: F
-                }
-                return files
+            F = open(file, 'rb')
+            return F
         except:
             print('读取文件失败')
             sys.exit()
