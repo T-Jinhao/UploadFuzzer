@@ -10,7 +10,8 @@ import os
 from urllib.parse import urljoin
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+    "Content-Type": "multipart/form-data"
 }
 content_type = {
     'png': 'image/png',
@@ -65,7 +66,7 @@ class UPLOAD:
             ct = content_type['plain']
         return ct
 
-    def setFiles(self, param, file, attachFilename='', ct=''):
+    def setFiles(self, field, file, attachFilename='', ct='', other={}):
         # 获取文件内容
         if ct == '':
             ct = self.setContentType(self.getSuffix(file))
@@ -74,11 +75,11 @@ class UPLOAD:
             attachFilename = filename
         try:
             files = {
-                param: (
+                field: (
                 attachFilename,
                 open(file, 'rb'),
                 ct,
-                {}
+                other
             )
             }
             # print(files)
@@ -195,7 +196,7 @@ def terminal_parser():
     parser.add_argument('-u', help='文件接收URL路径')
     parser.add_argument('-c', help='document.cookie，选填', default=None)
     parser.add_argument('-f', help='上传文件')
-    parser.add_argument('--param', help='上传参数名')
+    parser.add_argument('--field', help='上传参数名')
     parser.add_argument('--attach', help='webshell文件，附加时将尝试附加在正常文件内', default='')
     parser.add_argument('--bypass', help='尝试绕过WAF，成功即停', action='store_true')
     parser.add_argument('--bypass_ignore', help='尝试绕过WAF，尝试全部payload', action='store_true')
