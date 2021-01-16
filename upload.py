@@ -5,8 +5,6 @@
 import requests
 import argparse
 import sys
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class UPLOAD:
     def __init__(self, args):
