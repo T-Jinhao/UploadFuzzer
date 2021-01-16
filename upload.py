@@ -37,7 +37,7 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             pass
         else:    # 正常上传
-            files = self.setFiles(self.args.param, self.args.f)
+            files = self.setFiles(self.args.field, self.args.f)
             res = self.upload(files)
             if res != None:   # 通过与初始页面对比尝试找出上传路径
                 urls = self.extractUrls(res)
