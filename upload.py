@@ -77,10 +77,11 @@ class UPLOAD:
                 param: (
                 attachFilename,
                 open(file, 'rb'),
-                ct
+                ct,
+                {}
             )
             }
-            print(files)
+            # print(files)
             return files
         except:
             print('读取文件失败')
