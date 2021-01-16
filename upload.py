@@ -6,6 +6,7 @@ import requests
 import argparse
 import sys
 import re
+import os
 from urllib.parse import urljoin
 
 headers = {
@@ -53,22 +54,40 @@ class UPLOAD:
             print('获取文件后缀名失败')
             sys.exit()
 
-    def setFiles(self, param, file, attachFilename, content_type):
+    def setContentType(self, ext=''):
+        # 设置content-type
+        if ext != '':
+            try:
+                ct = content_type[ext]
+            except:
+                ct = content_type['plain']
+        else:
+            ct = content_type['plain']
+        return ct
+
+    def setFiles(self, param, file, attachFilename='', ct=''):
         # 获取文件内容
+        if ct == '':
+            ct = self.setContentType(self.getSuffix(file))
+        if attachFilename == '':
+            (path, filename) = os.path.split(file)
+            attachFilename = filename
         try:
             files = {
                 param: (
                 attachFilename,
                 open(file, 'rb'),
-                content_type
+                ct
             )
             }
+            print(files)
             return files
         except:
             print('读取文件失败')
             sys.exit()
 
     def getInitUrls(self, url):
+        # 获取上传文件前页面urls
         try:
             r = requests.get(url, headers=headers, timeout=5, cookies=self.cookies)
             urls = self.extractUrls(r.text)
@@ -103,11 +122,11 @@ class UPLOAD:
                 timeout=5
             )
             print('状态码:', r.status_code)
-            print(r.text)
+            # print(r.text)
             if r.status_code == 200:
                 return r.text
-        except:
-            pass
+        except Exception as e:
+            print(e)
         return
 
     def extractUrls(self, text):
