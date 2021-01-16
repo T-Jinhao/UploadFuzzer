@@ -5,11 +5,26 @@
 import requests
 import argparse
 import sys
+import re
+from urllib.parse import urljoin
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
+}
+content_type = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'json': 'application/json',
+    'plain': 'text/plain',
+}
 
 class UPLOAD:
     def __init__(self, args):
         self.args = args
         self.cookies = self.getCookie()
+        self.initUrls = self.getInitUrls(self.args.u)   # 未上传时的页面链接
 
     def run(self):
         if self.args.attach != '':
@@ -20,9 +35,11 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             pass
         else:    # 正常上传
-            F = self.getFileContent(self.args.f)
-            files = {self.args.param: F}
-            self.upload(files)
+            files = self.setFiles(self.args.param, self.args.f)
+            res = self.upload(files)
+            if res != None:   # 通过与初始页面对比尝试找出上传路径
+                urls = self.extractUrls(res)
+                self.comparaUrls(urls)
 
 
     def getSuffix(self, filename):
@@ -31,16 +48,33 @@ class UPLOAD:
             ext = filename.split('.')[-1]
             return ext
         except:
+            if self.args.content_type != '':
+                return
             print('获取文件后缀名失败')
             sys.exit()
 
-    def getFileContent(self, file):
+    def setFiles(self, param, file, attachFilename, content_type):
         # 获取文件内容
         try:
-            F = open(file, 'rb')
-            return F
+            files = {
+                param: (
+                attachFilename,
+                open(file, 'rb'),
+                content_type
+            )
+            }
+            return files
         except:
             print('读取文件失败')
+            sys.exit()
+
+    def getInitUrls(self, url):
+        try:
+            r = requests.get(url, headers=headers, timeout=5, cookies=self.cookies)
+            urls = self.extractUrls(r.text)
+            return urls
+        except Exception as e:
+            print(e)
             sys.exit()
 
     def getCookie(self):
@@ -70,12 +104,68 @@ class UPLOAD:
             )
             print('状态码:', r.status_code)
             print(r.text)
-            print()
             if r.status_code == 200:
-                return True
+                return r.text
         except:
             pass
-        return False
+        return
+
+    def extractUrls(self, text):
+        # 提取页面URL
+        resultUrls = []
+        regex_str = r"""
+                              (?:"|')                               # Start newline delimiter
+                              (
+                                ((?:[a-zA-Z]{1,10}://|//)           # Match a scheme [a-Z]*1-10 or //
+                                [^"'/]{1,}\.                        # Match a domainname (any character + dot)
+                                [a-zA-Z]{2,}[^"']{0,})              # The domainextension and/or path
+                                |
+                                ((?:/|\.\./|\./)                    # Start with /,../,./
+                                [^"'><,;| *()(%%$^/\\\[\]]          # Next character can't be...
+                                [^"'><,;|()]{1,})                   # Rest of the characters can't be
+                                |
+                                ([a-zA-Z0-9_\-/]{1,}/               # Relative endpoint with /
+                                [a-zA-Z0-9_\-/]{1,}                 # Resource name
+                                \.(?:[a-zA-Z]{1,4}|action)          # Rest + extension (length 1-4 or action)
+                                (?:[\?|/][^"|']{0,}|))              # ? mark with parameters
+                                |
+                                ([a-zA-Z0-9_\-]{1,}                 # filename
+                                \.(?:php|asp|aspx|jsp|json|
+                                     action|html|js|txt|xml)             # . + extension
+                                (?:\?[^"|']{0,}|))                  # ? mark with parameters
+                              )
+                              (?:"|')                               # End newline delimiter
+                            """
+        compile_str = re.compile(regex_str, re.VERBOSE)
+        ret = compile_str.findall(text)
+        if ret != []:
+            for x in ret:
+                for m in x:
+                    u = self.url_check(self.args.u, m)
+                    if u not in resultUrls and u:
+                        resultUrls.append(u)
+        return resultUrls
+
+    def url_check(self, url, u):
+        # 检测url完整性，返回绝对地址
+        err = ['', None, '/', '\n']
+        if u in err:
+            return
+        if re.match("(http|https)://.*", u):  # 匹配绝对地址
+            return u
+        else:  # 拼凑相对地址，转换成绝对地址
+            u = urljoin(url, u)
+            return u
+
+    def comparaUrls(self, urls):
+        # 对比页面url差别
+        if urls == []:
+            return
+        for u in urls:
+            if u not in self.initUrls:
+                print(u)
+        return
+
 
 
 def terminal_parser():
@@ -89,6 +179,7 @@ def terminal_parser():
     parser.add_argument('--attach', help='webshell文件，附加时将尝试附加在正常文件内', default='')
     parser.add_argument('--bypass', help='尝试绕过WAF，成功即停', action='store_true')
     parser.add_argument('--bypass_ignore', help='尝试绕过WAF，尝试全部payload', action='store_true')
+    parser.add_argument('--content_type', help='文件上传类型', default='', choices=['png', 'jpeg', 'gif', 'json', 'plain'])
     args = parser.parse_args()
     return args
 
