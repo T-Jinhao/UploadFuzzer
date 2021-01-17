@@ -8,6 +8,7 @@ import sys
 import re
 import os
 from urllib.parse import urljoin
+from color_output import *
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
@@ -42,6 +43,7 @@ class UPLOAD:
 
     def normalUpload(self):
         # 正常上传
+        print(fuchsia('[ module ]') + cyan('普通上传'))
         files = self.setFiles(self.args.field, self.args.f)
         data = self.setData(self.args.data)
         res = self.upload(files, data=data)
@@ -58,7 +60,7 @@ class UPLOAD:
         except:
             if self.args.content_type != '':
                 return
-            print('获取文件后缀名失败')
+            print(red('[ Error ]') + yellow('获取文件后缀名失败'))
             sys.exit()
 
     def setData(self, data):
@@ -101,7 +103,7 @@ class UPLOAD:
             # print(files)
             return files
         except:
-            print('读取文件失败')
+            print(red('[ Error ]') + yellow('读取文件失败'))
             sys.exit()
 
     def getInitUrls(self, url):
@@ -111,7 +113,7 @@ class UPLOAD:
             urls = self.extractUrls(r.text)
             return urls
         except Exception as e:
-            print(e)
+            print(red('[ Error ]') + e)
             sys.exit()
 
     def getCookie(self):
@@ -125,7 +127,7 @@ class UPLOAD:
                 name, value = x.strip().split('=', 1)
                 cookies[name] = value  # 为字典cookies添加内容
         except:
-            print('cookie格式错误')
+            print(red('[ Error ]') + yellow('cookie格式错误'))
             sys.exit()
         return cookies
 
@@ -139,12 +141,12 @@ class UPLOAD:
                 headers=headers,
                 timeout=5
             )
-            print('状态码:', r.status_code)
+            print(blue('[ result ]') + fuchsia('状态码:') + green(r.status_code))
             # print(r.text)
             if r.status_code == 200:
                 return r.text
         except Exception as e:
-            print(e)
+            print(yellow('[ Warn ]') + e)
         return
 
     def extractUrls(self, text):
@@ -200,7 +202,25 @@ class UPLOAD:
             return
         for u in urls:
             if u not in self.initUrls:
-                print(u)
+                print(green('[ upload ]') + u)
+                self.checkLive(u)
+        return
+
+    def checkLive(self, u):
+        # 检测结果存活
+        try:
+            r = requests.get(
+                u,
+                cookies=self.cookies,
+                headers=headers,
+                timeout=5
+            )
+            if r.status_code != 404:
+                print(green('[ live ]') + cyan(r.status_code))
+            else:
+                print(yellow('[ live ]') + cyan(r.status_code))
+        except Exception as e:
+            print(yellow('[ Warn ]') + e)
         return
 
 
