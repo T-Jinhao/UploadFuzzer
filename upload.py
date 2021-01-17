@@ -20,6 +20,7 @@ class UPLOAD:
     def __init__(self, args):
         self.args = args
         self.cookies = self.getCookie()
+        self.data = self.setData(self.args.data)  # 填充参数
         self.initUrls = self.getInitUrls(self.args.u)   # 未上传时的页面链接
 
     def run(self):
@@ -33,11 +34,8 @@ class UPLOAD:
         # 正常上传
         print(fuchsia('[ module ]') + cyan('普通上传'))
         files = self.setNormalFiles(self.args.field, self.args.f)  # 读取文件
-        data = self.setData(self.args.data)   # 填充参数
-        res = upload(self.args.u, files, data=data)   # 文件上传
-        if res != None:  # 通过与初始页面对比尝试找出上传路径
-            urls = self.extractUrls(res)      # 提取URL
-            self.comparaUrls(urls)            # 结果对比
+        res = upload(self.args.u, files, data=self.data)   # 文件上传
+        self.checkResult(res)
         return
 
     def deformityUpload(self):
@@ -50,9 +48,15 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             print(blue('[ module ]') + 'bypass，全部尝试')
             stop = False
-        m = General(self.args, stop=stop)
+        m = General(self.args, data=self.data, stop=stop)
         m.exploit()
         return
+
+    def checkResult(self, res):
+        # 检查结果
+        if res != None:  # 通过与初始页面对比尝试找出上传路径
+            urls = self.extractUrls(res)      # 提取URL
+            self.comparaUrls(urls)            # 结果对比
 
 
     def getSuffix(self, filename):
