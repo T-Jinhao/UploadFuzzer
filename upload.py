@@ -39,12 +39,12 @@ class UPLOAD:
     def normalUpload(self):
         # 正常上传
         print(fuchsia('[ module ]') + cyan('普通上传'))
-        files = self.setFiles(self.args.field, self.args.f)
-        data = self.setData(self.args.data)
-        res = self.upload(files, data=data)
+        files = self.setFiles(self.args.field, self.args.f)  # 读取文件
+        data = self.setData(self.args.data)   # 填充参数
+        res = upload(self.args.u, files, data=data)   # 文件上传
         if res != None:  # 通过与初始页面对比尝试找出上传路径
-            urls = self.extractUrls(res)
-            self.comparaUrls(urls)
+            urls = self.extractUrls(res)      # 提取URL
+            self.comparaUrls(urls)            # 结果对比
         return
 
     def deformityUpload(self):
@@ -58,6 +58,7 @@ class UPLOAD:
             print(blue('[ module ]') + 'bypass，全部尝试')
             stop = False
         m = General(self.args, stop=stop)
+        m.exploit()
         return
 
 
@@ -140,23 +141,6 @@ class UPLOAD:
             sys.exit()
         return cookies
 
-    def upload(self, files, data={}, headers={}):
-        # 构造请求体
-        try:
-            r = requests.post(
-                self.args.u,
-                files=files,
-                data=data,
-                headers=headers,
-                timeout=5
-            )
-            print(blue('[ result ]') + fuchsia('状态码:') + green(r.status_code))
-            if r.status_code == 200:
-                return r.text
-        except Exception as e:
-            print(yellow('[ Warn ]') + e)
-        return
-
     def extractUrls(self, text):
         # 提取页面URL
         resultUrls = []
@@ -231,6 +215,22 @@ class UPLOAD:
             print(yellow('[ Warn ]') + e)
         return
 
+def upload(url, files, data={}, headers={}):
+    # 构造请求体
+    try:
+        r = requests.post(
+            url,
+            files=files,
+            data=data,
+            headers=headers,
+            timeout=5
+        )
+        print(blue('[ result ]') + fuchsia('状态码:') + green(r.status_code))
+        if r.status_code == 200:
+            return r.text
+    except Exception as e:
+        print(yellow('[ Warn ]') + e)
+    return
 
 
 def terminal_parser():
