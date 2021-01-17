@@ -10,17 +10,10 @@ import os
 from urllib.parse import urljoin
 from color_output import *
 from bypass import General
+from comman import *
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
-}
-content_type = {
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'json': 'application/json',
-    'plain': 'text/plain',
 }
 
 class UPLOAD:
@@ -74,6 +67,7 @@ class UPLOAD:
             sys.exit()
 
     def setData(self, data):
+        # 解析data
         if data == '':
             return {}
         else:
@@ -83,21 +77,13 @@ class UPLOAD:
                 retData[v] = k
             return retData
 
-    def setContentType(self, ext=''):
-        # 设置content-type
-        if ext != '':
-            try:
-                ct = content_type[ext]
-            except:
-                ct = content_type['plain']
-        else:
-            ct = content_type['plain']
-        return ct
 
     def setFiles(self, field, file, attachFilename='', ct='', other={}):
         # 获取文件内容
-        if ct == '':
-            ct = self.setContentType(self.getSuffix(file))
+        if self.args.mime != '':
+            ct = self.args.mime
+        elif ct == '':
+            ct = setContentType(self.getSuffix(file))
         if attachFilename == '':
             (path, filename) = os.path.split(file)
             attachFilename = filename
@@ -215,22 +201,6 @@ class UPLOAD:
             print(yellow('[ Warn ]') + e)
         return
 
-def upload(url, files, data={}, headers={}):
-    # 构造请求体
-    try:
-        r = requests.post(
-            url,
-            files=files,
-            data=data,
-            headers=headers,
-            timeout=5
-        )
-        print(blue('[ result ]') + fuchsia('状态码:') + green(r.status_code))
-        if r.status_code == 200:
-            return r.text
-    except Exception as e:
-        print(yellow('[ Warn ]') + e)
-    return
 
 
 def terminal_parser():
