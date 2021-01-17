@@ -5,12 +5,9 @@
 import requests
 import argparse
 import sys
-import re
-import os
-from urllib.parse import urljoin
 from color_output import *
 from bypass import General
-from comman import *
+from comman import Comman
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
@@ -21,7 +18,8 @@ class UPLOAD:
         self.args = args
         self.cookies = self.getCookie()
         self.data = self.setData(self.args.data)  # 填充参数
-        self.initUrls = self.getInitUrls(self.args.u)   # 未上传时的页面链接
+        self.Comman = Comman(self.args.u)
+        self.initUrls = self.Comman.extractUrls(self.getInitText(self.args.u))  # 未上传前的初始URL集
 
     def run(self):
         # 占坑，未完成
@@ -34,8 +32,10 @@ class UPLOAD:
         # 正常上传
         print(fuchsia('[ module ]') + cyan('普通上传'))
         files = self.setNormalFiles(self.args.field, self.args.f)  # 读取文件
-        res = upload(self.args.u, files, data=self.data)   # 文件上传
-        self.checkResult(res)
+        res = self.Comman.upload(self.args.u, files, data=self.data)   # 文件上传
+        result = self.Comman.checkResult(self.initUrls, res)
+        if result == True:
+            print(green('[ result ]') + cyan('成功上传'))
         return
 
     def deformityUpload(self):
@@ -48,16 +48,9 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             print(blue('[ module ]') + 'bypass，全部尝试')
             stop = False
-        m = General(self.args, data=self.data, stop=stop)
+        m = General(self.args, data=self.data, initUrls=self.initUrls, comman=self.Comman, stop=stop)
         m.exploit()
         return
-
-    def checkResult(self, res):
-        # 检查结果
-        if res != None:  # 通过与初始页面对比尝试找出上传路径
-            urls = self.extractUrls(res)      # 提取URL
-            self.comparaUrls(urls)            # 结果对比
-
 
     def getSuffix(self, filename):
         # 获取文件名后缀
@@ -77,7 +70,7 @@ class UPLOAD:
         else:
             retData = {}
             for x in data.split(';'):
-                v,k =  x.strip().split('=',1)
+                v,k =  x.strip().split('=', 1)
                 retData[v] = k
             return retData
 
@@ -97,12 +90,11 @@ class UPLOAD:
             print(red('[ Error ]') + yellow('读取文件失败'))
             sys.exit()
 
-    def getInitUrls(self, url):
-        # 获取上传文件前页面urls
+    def getInitText(self, url):
+        # 获取上传文件前页面
         try:
             r = requests.get(url, headers=headers, timeout=5, cookies=self.cookies)
-            urls = self.extractUrls(r.text)
-            return urls
+            return r.text
         except Exception as e:
             print(red('[ Error ]') + e)
             sys.exit()
@@ -121,81 +113,6 @@ class UPLOAD:
             print(red('[ Error ]') + yellow('cookie格式错误'))
             sys.exit()
         return cookies
-
-    def extractUrls(self, text):
-        # 提取页面URL
-        resultUrls = []
-        regex_str = r"""
-                              (?:"|')                               # Start newline delimiter
-                              (
-                                ((?:[a-zA-Z]{1,10}://|//)           # Match a scheme [a-Z]*1-10 or //
-                                [^"'/]{1,}\.                        # Match a domainname (any character + dot)
-                                [a-zA-Z]{2,}[^"']{0,})              # The domainextension and/or path
-                                |
-                                ((?:/|\.\./|\./)                    # Start with /,../,./
-                                [^"'><,;| *()(%%$^/\\\[\]]          # Next character can't be...
-                                [^"'><,;|()]{1,})                   # Rest of the characters can't be
-                                |
-                                ([a-zA-Z0-9_\-/]{1,}/               # Relative endpoint with /
-                                [a-zA-Z0-9_\-/]{1,}                 # Resource name
-                                \.(?:[a-zA-Z]{1,4}|action)          # Rest + extension (length 1-4 or action)
-                                (?:[\?|/][^"|']{0,}|))              # ? mark with parameters
-                                |
-                                ([a-zA-Z0-9_\-]{1,}                 # filename
-                                \.(?:php|asp|aspx|jsp|json|
-                                     action|html|js|txt|xml)             # . + extension
-                                (?:\?[^"|']{0,}|))                  # ? mark with parameters
-                              )
-                              (?:"|')                               # End newline delimiter
-                            """
-        compile_str = re.compile(regex_str, re.VERBOSE)
-        ret = compile_str.findall(text)
-        if ret != []:
-            for x in ret:
-                for m in x:
-                    u = self.url_check(self.args.u, m)
-                    if u not in resultUrls and u:
-                        resultUrls.append(u)
-        return resultUrls
-
-    def url_check(self, url, u):
-        # 检测url完整性，返回绝对地址
-        err = ['', None, '/', '\n']
-        if u in err:
-            return
-        if re.match("(http|https)://.*", u):  # 匹配绝对地址
-            return u
-        else:  # 拼凑相对地址，转换成绝对地址
-            u = urljoin(url, u)
-            return u
-
-    def comparaUrls(self, urls):
-        # 对比页面url差别
-        if urls == []:
-            return
-        for u in urls:
-            if u not in self.initUrls:
-                print(green('[ upload ]') + u)
-                self.checkLive(u)
-        return
-
-    def checkLive(self, u):
-        # 检测结果存活
-        try:
-            r = requests.get(
-                u,
-                cookies=self.cookies,
-                headers=headers,
-                timeout=5
-            )
-            if r.status_code != 404:
-                print(green('[ live ]') + cyan(r.status_code))
-            else:
-                print(yellow('[ live ]') + cyan(r.status_code))
-        except Exception as e:
-            print(yellow('[ Warn ]') + e)
-        return
-
 
 
 def terminal_parser():
