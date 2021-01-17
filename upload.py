@@ -32,7 +32,7 @@ class UPLOAD:
     def normalUpload(self):
         # 正常上传
         print(fuchsia('[ module ]') + cyan('普通上传'))
-        files = self.setFiles(self.args.field, self.args.f)  # 读取文件
+        files = self.setNormalFiles(self.args.field, self.args.f)  # 读取文件
         data = self.setData(self.args.data)   # 填充参数
         res = upload(self.args.u, files, data=data)   # 文件上传
         if res != None:  # 通过与初始页面对比尝试找出上传路径
@@ -78,22 +78,13 @@ class UPLOAD:
             return retData
 
 
-    def setFiles(self, field, file, attachFilename='', ct='', other={}):
-        # 获取文件内容
-        if self.args.mime != '':
-            ct = self.args.mime
-        elif ct == '':
-            ct = setContentType(self.getSuffix(file))
-        if attachFilename == '':
-            (path, filename) = os.path.split(file)
-            attachFilename = filename
+    def setNormalFiles(self, field, file):
+        # 获取文件内容，普通上传专属
         try:
             files = {
                 field: (
-                attachFilename,
+                file,
                 open(file, 'rb'),
-                ct,
-                other
             )
             }
             # print(files)
