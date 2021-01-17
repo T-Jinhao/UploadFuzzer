@@ -28,7 +28,6 @@ class UPLOAD:
         self.args = args
         self.cookies = self.getCookie()
         self.initUrls = self.getInitUrls(self.args.u)   # 未上传时的页面链接
-        self.initData = ''
 
     def run(self):
         # 占坑，未完成
@@ -68,7 +67,7 @@ class UPLOAD:
             ext = filename.split('.')[-1]
             return ext
         except:
-            if self.args.content_type != '':
+            if self.args.ct != '':
                 return
             print(red('[ Error ]') + yellow('获取文件后缀名失败'))
             sys.exit()
@@ -246,7 +245,8 @@ def terminal_parser():
     parser.add_argument('--attach', help='webshell文件，附加时将尝试附加在正常文件内', default='')
     parser.add_argument('--bypass', help='尝试绕过WAF，成功即停', action='store_true')
     parser.add_argument('--bypass_ignore', help='尝试绕过WAF，尝试全部payload', action='store_true')
-    parser.add_argument('--content_type', help='文件上传类型', default='', choices=['png', 'jpeg', 'gif', 'json', 'plain'])
+    parser.add_argument('--ct', help='文件上传类型', default='', choices=['png', 'jpeg', 'gif', 'json', 'plain'])
+    parser.add_argument('--mime', help='自定义content-type', default='')
     args = parser.parse_args()
     return args
 
