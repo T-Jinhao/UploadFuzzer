@@ -9,10 +9,10 @@ import re
 import os
 from urllib.parse import urljoin
 from color_output import *
+from bypass import General
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
-    "Content-Type": "multipart/form-data"
 }
 content_type = {
     'png': 'image/png',
@@ -31,13 +31,9 @@ class UPLOAD:
         self.initData = ''
 
     def run(self):
-        if self.args.attach != '':
-            self.suffix = self.getSuffix(self.args.attach)
-            # 占坑，未完成
-        if self.args.bypass:
-            pass
-        elif self.args.bypass_ignore:
-            pass
+        # 占坑，未完成
+        if self.args.bypass or self.args.bypass_ignore:  # 畸形请求
+            self.deformityUpload()
         else:    # 正常上传
             self.normalUpload()
 
@@ -50,6 +46,20 @@ class UPLOAD:
         if res != None:  # 通过与初始页面对比尝试找出上传路径
             urls = self.extractUrls(res)
             self.comparaUrls(urls)
+        return
+
+    def deformityUpload(self):
+        # 非正常上传
+        if self.args.attach != '':  # 存在attach合并文件，获取后缀名备用
+            suffix = self.getSuffix(self.args.attach)
+        stop = True
+        if self.args.bypass:
+            print(blue('[ module ]') + 'bypass，成功即停')
+        elif self.args.bypass_ignore:
+            print(blue('[ module ]') + 'bypass，全部尝试')
+            stop = False
+        m = General(self.args, stop=stop)
+        return
 
 
     def getSuffix(self, filename):
@@ -142,7 +152,6 @@ class UPLOAD:
                 timeout=5
             )
             print(blue('[ result ]') + fuchsia('状态码:') + green(r.status_code))
-            # print(r.text)
             if r.status_code == 200:
                 return r.text
         except Exception as e:
