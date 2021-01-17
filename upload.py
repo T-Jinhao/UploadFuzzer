@@ -27,6 +27,7 @@ class UPLOAD:
         self.args = args
         self.cookies = self.getCookie()
         self.initUrls = self.getInitUrls(self.args.u)   # 未上传时的页面链接
+        self.initData = ''
 
     def run(self):
         if self.args.attach != '':
@@ -37,11 +38,16 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             pass
         else:    # 正常上传
-            files = self.setFiles(self.args.field, self.args.f)
-            res = self.upload(files)
-            if res != None:   # 通过与初始页面对比尝试找出上传路径
-                urls = self.extractUrls(res)
-                self.comparaUrls(urls)
+            self.normalUpload()
+
+    def normalUpload(self):
+        # 正常上传
+        files = self.setFiles(self.args.field, self.args.f)
+        data = self.setData(self.args.data)
+        res = self.upload(files, data=data)
+        if res != None:  # 通过与初始页面对比尝试找出上传路径
+            urls = self.extractUrls(res)
+            self.comparaUrls(urls)
 
 
     def getSuffix(self, filename):
@@ -54,6 +60,16 @@ class UPLOAD:
                 return
             print('获取文件后缀名失败')
             sys.exit()
+
+    def setData(self, data):
+        if data == '':
+            return {}
+        else:
+            retData = {}
+            for x in data.split(';'):
+                v,k =  x.strip().split('=',1)
+                retData[v] = k
+            return retData
 
     def setContentType(self, ext=''):
         # 设置content-type
@@ -197,6 +213,7 @@ def terminal_parser():
     parser.add_argument('-c', help='document.cookie，选填', default=None)
     parser.add_argument('-f', help='上传文件')
     parser.add_argument('--field', help='上传参数名')
+    parser.add_argument('--data', help='附加参数，如submit=true，多参数用;分割')
     parser.add_argument('--attach', help='webshell文件，附加时将尝试附加在正常文件内', default='')
     parser.add_argument('--bypass', help='尝试绕过WAF，成功即停', action='store_true')
     parser.add_argument('--bypass_ignore', help='尝试绕过WAF，尝试全部payload', action='store_true')
