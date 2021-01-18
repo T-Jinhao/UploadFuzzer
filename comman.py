@@ -4,6 +4,7 @@
 
 import requests
 import re
+import os
 from color_output import *
 from urllib.parse import urljoin
 
@@ -135,3 +136,8 @@ class Comman:
         else:  # 拼凑相对地址，转换成绝对地址
             u = urljoin(self.initUrl, u)
             return u
+
+    def getFilename(self, file):
+        # 获取文件名
+        (path, filename) = os.path.split(file)
+        return filename

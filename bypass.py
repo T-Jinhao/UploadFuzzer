@@ -22,7 +22,7 @@ headers = {
 class General:
     def __init__(self, args, data, initUrls, comman, stop=True):
         '''
-
+        初始化
         :param args: args集
         :param data: 传送参数
         :param initUrls: 初始URL集
@@ -71,21 +71,40 @@ class General:
         elif self.args.ct != '':
             ct = self.Comman.setContentType(self.args.ct)
         print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(ct))
-        files = self.setFiles(self.args.field, self.args.f, ct=ct)
+        if self.args.attach != '':  # 使用attach文件上传
+            file = self.args.attach
+        else:
+            file = self.args.f
+        files = self.setFiles(self.args.field, file=file, ct=ct)
         res = self.Comman.upload(self.args.u, files, data=self.data)
         return res
 
-
-
-    def setFiles(self, field, file, attachFilename='', ct='', other={}):
-        # 获取文件内容
-        if attachFilename == '':
-            (path, filename) = os.path.split(file)
-            attachFilename = filename
+    def setAttachFiles(self, field, file, attach, ct='', other={}):
+        # 设置attach文件
         try:
             files = {
                 field: (
-                attachFilename,
+                attach,
+                open(file, 'rb'),
+                ct,
+                other
+            )
+            }
+            # print(files)
+            return files
+        except:
+            print(red('[ Error ]') + yellow('读取文件失败'))
+            sys.exit()
+
+
+    def setFiles(self, field, file, filename='', ct='', other={}):
+        # 设置文件
+        if filename == '':
+            filename = self.Comman.getFilename(file)
+        try:
+            files = {
+                field: (
+                filename,
                 open(file, 'rb'),
                 ct,
                 other
