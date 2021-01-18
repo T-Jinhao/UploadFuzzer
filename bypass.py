@@ -53,6 +53,7 @@ class General:
         # 判断是否结束
         if check == True:
             print(green('[ result ]') + cyan('成功上传'))
+            print()
         if stop == True:
             print(blue('[ schedule ]') + cyan('测试完毕'))
             sys.exit()
@@ -114,15 +115,18 @@ class General:
         if suffix == False:
             return False
         fns = self.fuzzRareSuffix(suffix, filename)
-        for f in fns:
-            files = self.setFiles(
-                field=self.args.field,
-                file=file,
-                filename=f
-            )
-            res = self.Comman.upload(self.args.u, files, self.data)
-            check = self.Comman.checkResult(self.initUrls, res)
-            self.end(check=check, stop=self.stop)
+        if fns != []:
+            print(blue('[ schedule ]') + cyan('利用不同的拓展名及文件名大小写混淆绕过'))
+            for f in fns:
+                print(blue('[ Info ]') + fuchsia('上传文件名:') + cyan(f))
+                files = self.setFiles(
+                    field=self.args.field,
+                    file=file,
+                    filename=f
+                )
+                res = self.Comman.upload(self.args.u, files, self.data)
+                check = self.Comman.checkResult(self.initUrls, res)
+                self.end(check=check, stop=self.stop)
         return
 
     def getSuffix(self, filename):
