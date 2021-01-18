@@ -44,7 +44,15 @@ class General:
         c1 = self.Comman.checkResult(self.initUrls, p1)
         if c1 == True:
             print(green('[ result ]') + cyan('成功上传'))
+            if self.stop == True:
+                self.end()
+        self.end()
         return
+
+    def end(self):
+        # 判断是否结束
+        print(blue('[ schedule ]') + cyan('测试完毕'))
+        sys.exit(0)
 
 
     def fuzzHeaders(self, headers, key, value):

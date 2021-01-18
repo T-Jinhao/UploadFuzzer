@@ -114,6 +114,19 @@ class UPLOAD:
             sys.exit()
         return cookies
 
+    def showMessage(self):
+        # 展示选项参数
+        print(blue('[ schedule ]') + cyan('参数展示'))
+        print(green('[ Info ]') + fuchsia('上传路径:') + self.args.u)
+        print(green('[ Info ]') + fuchsia('上传文件:') + cyan(self.args.f))
+        print(green('[ Info ]') + fuchsia('参数名称:') + cyan(self.args.field))
+        if self.args.c:
+            print(green('[ Info ]') + fuchsia('cookie信息:') + cyan('已填写'))
+        if self.args.data:
+            print(green('[ Info ]') + fuchsia('附加参数:') + cyan('已填写'))
+        print()
+        return
+
 
 def terminal_parser():
     if len(sys.argv)==1 :
@@ -135,4 +148,5 @@ def terminal_parser():
 if __name__ == '__main__':
     args = terminal_parser()
     x = UPLOAD(args)
+    x.showMessage()
     x.run()
