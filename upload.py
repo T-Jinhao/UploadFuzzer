@@ -40,8 +40,6 @@ class UPLOAD:
 
     def deformityUpload(self):
         # 非正常上传
-        if self.args.attach != '':  # 存在attach合并文件，获取后缀名备用
-            suffix = self.getSuffix(self.args.attach)
         stop = True
         if self.args.bypass:
             print(fuchsia('[ module ]') + cyan('bypass，成功即停'))
@@ -51,17 +49,6 @@ class UPLOAD:
         m = General(self.args, data=self.data, initUrls=self.initUrls, comman=self.Comman, stop=stop)
         m.exploit()
         return
-
-    def getSuffix(self, filename):
-        # 获取文件名后缀
-        try:
-            ext = filename.split('.')[-1]
-            return ext
-        except:
-            if self.args.ct != '':
-                return
-            print(red('[ Error ]') + yellow('获取文件后缀名失败'))
-            sys.exit()
 
     def setData(self, data):
         # 解析data
