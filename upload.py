@@ -119,6 +119,8 @@ class UPLOAD:
         print(blue('[ schedule ]') + cyan('参数展示'))
         print(green('[ Info ]') + fuchsia('上传路径:') + self.args.u)
         print(green('[ Info ]') + fuchsia('上传文件:') + cyan(self.args.f))
+        if self.args.attach:
+            print(green('[ Info ]') + fuchsia('伪造文件:') + cyan(self.args.attach))
         print(green('[ Info ]') + fuchsia('参数名称:') + cyan(self.args.field))
         if self.args.c:
             print(green('[ Info ]') + fuchsia('cookie信息:') + cyan('已填写'))
