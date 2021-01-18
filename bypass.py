@@ -40,7 +40,11 @@ class General:
         尝试攻击并检查输出
         :return:
         '''
-        pass
+        p1 = self.mimeBypass()
+        c1 = self.Comman.checkResult(self.initUrls, p1)
+        if c1 == True:
+            print(green('[ result ]') + cyan('成功上传'))
+        return
 
 
     def fuzzHeaders(self, headers, key, value):
@@ -48,17 +52,17 @@ class General:
         headers[key] = value
         return headers
 
-    def mimeBypass(self, ct=''):
+    def mimeBypass(self, ct='image/jpg'):
         '''
         MIME绕过后端检测
         :return:
         '''
-        print(blue('[ schedule ]') + cyan('MIME绕过测试'))
+        print(blue('[ schedule ]') + cyan('利用MIME绕过测试'))
         if self.args.mime != '':
             ct = self.args.mime
         elif self.args.ct != '':
             ct = self.Comman.setContentType()
-        print(fuchsia('[ Info ]') + cyan(ct))
+        print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(ct))
         files = self.setFiles(self.args.field, self.args.f, ct=ct)
         res = self.Comman.upload(self.args.u, files, data=self.data)
         return res

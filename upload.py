@@ -44,9 +44,9 @@ class UPLOAD:
             suffix = self.getSuffix(self.args.attach)
         stop = True
         if self.args.bypass:
-            print(blue('[ module ]') + 'bypass，成功即停')
+            print(fuchsia('[ module ]') + cyan('bypass，成功即停'))
         elif self.args.bypass_ignore:
-            print(blue('[ module ]') + 'bypass，全部尝试')
+            print(fuchsia('[ module ]') + cyan('bypass，全部尝试'))
             stop = False
         m = General(self.args, data=self.data, initUrls=self.initUrls, comman=self.Comman, stop=stop)
         m.exploit()

@@ -34,7 +34,7 @@ class Comman:
                 headers=headers,
                 timeout=5
             )
-            print(blue('[ result ]') + fuchsia('状态码:') + green(r.status_code))
+            print(blue('[ upload ]') + fuchsia('状态码:') + green(r.status_code))
             if r.status_code == 200:
                 return r.text
         except Exception as e:
@@ -61,10 +61,10 @@ class Comman:
                 timeout=5
             )
             if r.status_code != 404:
-                print(green('[ status ]') + cyan(r.status_code))
+                print(green('[ match_status ]') + cyan(r.status_code))
                 result = 1
             else:
-                print(yellow('[ status ]') + cyan(r.status_code))
+                print(yellow('[ match_status ]') + cyan(r.status_code))
         except Exception as e:
             print(yellow('[ Warn ]') + e)
         return result
@@ -76,7 +76,7 @@ class Comman:
             return count
         for u in urls:
             if u not in initUrls:
-                print(green('[ upload ]') + u)
+                print(green('[ match ]') + u)
                 count += self.checkStatus(u)
         return count
 
