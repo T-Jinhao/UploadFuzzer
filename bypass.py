@@ -61,7 +61,7 @@ class General:
         if self.args.mime != '':
             ct = self.args.mime
         elif self.args.ct != '':
-            ct = self.Comman.setContentType()
+            ct = self.Comman.setContentType(self.args.ct)
         print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(ct))
         files = self.setFiles(self.args.field, self.args.f, ct=ct)
         res = self.Comman.upload(self.args.u, files, data=self.data)
