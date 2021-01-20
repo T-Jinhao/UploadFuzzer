@@ -98,9 +98,9 @@ class General:
             'windows': 260,
             'linux': 255
         }
-        length = len(suffix) - 1   # 后缀名长度
+        length = len(suffix) + 1   # 后缀名长度
         for x in system_length_limit:
-            f = 'a' * (system_length_limit[x] - length - 4) + '.' + suffix + '.jpg'
+            f = 'a' * (system_length_limit[x] - length) + '.' + suffix + '.jpg'
             fns.append(f)
         return fns
 
