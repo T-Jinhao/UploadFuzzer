@@ -89,8 +89,8 @@ class UPLOAD:
     def getCookie(self):
         # 解析document.cookie
         cookie = self.args.c
-        if cookie == '':
-            return ''
+        if cookie == None:
+            return None
         cookies = {}  # 初始化cookies字典变量
         try:
             for x in cookie.split(';'):  # 按照字符：进行划分读取
@@ -122,7 +122,7 @@ def terminal_parser():
         sys.argv.append('-h')
     parser = argparse.ArgumentParser(description='动态文件上传', add_help=True)
     parser.add_argument('-u', help='文件接收URL路径')
-    parser.add_argument('-c', help='document.cookie，选填', default='')
+    parser.add_argument('-c', help='document.cookie，选填', default=None)
     parser.add_argument('-f', help='上传文件')
     parser.add_argument('--field', help='上传参数名')
     parser.add_argument('--data', help='附加参数，如submit=true，多参数用;分割', default='')
