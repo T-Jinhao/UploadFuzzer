@@ -20,7 +20,7 @@ headers = {
 }
 
 class General:
-    def __init__(self, args, data, initUrls, comman, stop=True):
+    def __init__(self, args, data, initUrls, comman, cookies, stop=True):
         '''
         初始化
         :param args: args集
@@ -33,6 +33,7 @@ class General:
         self.data = data
         self.initUrls = initUrls
         self.Comman = comman
+        self.cookies = cookies
         self.stop = stop
 
     def exploit(self):
@@ -129,7 +130,7 @@ class General:
         print(blue('[ schedule ]') + cyan('利用MIME绕过测试'))
         print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(self.p_ct))
         files = self.setFiles(self.args.field, file=self.p_file, ct=self.p_ct)
-        res = self.Comman.upload(self.args.u, files, data=self.data)
+        res = self.Comman.upload(self.args.u, files, data=self.data, cookies=self.cookies)
         check = self.Comman.checkResult(self.initUrls, res)
         self.end(check=check, stop=self.stop)
         return
@@ -152,7 +153,7 @@ class General:
                     file=self.p_file,
                     filename=f
                 )
-                res = self.Comman.upload(self.args.u, files, self.data)
+                res = self.Comman.upload(url=self.args.u, files=files, data=self.data, cookies=self.cookies)
                 check = self.Comman.checkResult(self.initUrls, res)
                 self.end(check=check, stop=self.stop)
         return
@@ -174,7 +175,7 @@ class General:
                     file=self.p_file,
                     filename=f
                 )
-                res = self.Comman.upload(self.args.u, files, self.data)
+                res = self.Comman.upload(url=self.args.u, files=files, data=self.data, cookies=self.cookies)
                 check = self.Comman.checkResult(self.initUrls, res)
                 self.end(check=check, stop=self.stop)
         return
@@ -197,7 +198,7 @@ class General:
             print(blue('[ schedule ]') + cyan('尝试以内容混淆绕过检测'))
             for f in Files:
                 print(blue('[ Info ]') + fuchsia('绕过姿势:') + cyan(f['Desc']))
-                res = self.Comman.upload(self.args.u, f['files'], self.data)
+                res = self.Comman.upload(url=self.args.u, files=f['files'], data=self.data, cookies=self.cookies)
                 check = self.Comman.checkResult(self.initUrls, res)
                 self.end(check=check, stop=self.stop)
         return

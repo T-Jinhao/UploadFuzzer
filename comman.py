@@ -27,7 +27,7 @@ class Comman:
         '''
         self.initUrl = initUrl
 
-    def upload(self, url, files, data={}, headers={}):
+    def upload(self, url, files, cookies, data={}, headers={}):
         # 构造请求体
         try:
             r = requests.post(
@@ -35,6 +35,7 @@ class Comman:
                 files=files,
                 data=data,
                 headers=headers,
+                cookies=cookies,
                 timeout=5
             )
             print(blue('[ upload ]') + fuchsia('状态码:') + green(r.status_code))

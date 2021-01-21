@@ -32,7 +32,7 @@ class UPLOAD:
         # 正常上传
         print(fuchsia('[ module ]') + cyan('普通上传'))
         files = self.setNormalFiles(self.args.field, self.args.f)  # 读取文件
-        res = self.Comman.upload(self.args.u, files, data=self.data)   # 文件上传
+        res = self.Comman.upload(self.args.u, files, data=self.data, cookies=self.cookies)   # 文件上传
         result = self.Comman.checkResult(self.initUrls, res)
         if result == True:
             print(green('[ result ]') + cyan('成功上传'))
@@ -46,7 +46,7 @@ class UPLOAD:
         elif self.args.bypass_ignore:
             print(fuchsia('[ module ]') + cyan('bypass，全部尝试'))
             stop = False
-        m = General(self.args, data=self.data, initUrls=self.initUrls, comman=self.Comman, stop=stop)
+        m = General(self.args, data=self.data, initUrls=self.initUrls, comman=self.Comman, stop=stop, cookies=self.cookies)
         m.exploit()
         return
 
