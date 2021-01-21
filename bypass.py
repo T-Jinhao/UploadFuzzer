@@ -104,13 +104,14 @@ class General:
 
     def addTruncated(self, filename):
         # 添加截断后缀
-        Truncated = ['%00.jpg', '::$DATA', '0x00.jpg', '/00.jpg', ' .jpg']   # 尝试截断
+        Truncated = ['%00.jpg', '::$DATA', '0x00.jpg', '/00.jpg', ' .jpg', "\n"]   # 尝试截断
         apache = ['.xxx.yyy']      # apache解析漏洞
         iis = [';.jpg']   # iis解析漏洞
         fns = []
         fns += [filename+x for x in Truncated]
         fns += [filename+y for y in apache]
         fns += [filename+z for z in iis]
+        fns += ["[0x09]"+filename]
         return fns
 
     def longFilename(self, suffix):
@@ -302,10 +303,4 @@ class General:
             print(red('[ Error ]') + yellow('读取文件失败'))
             sys.exit()
 
-    def waf_baidu(self):
-        '''
-        1、对文件名大小没有验证
-        :return:
-        '''
-        pass
 
