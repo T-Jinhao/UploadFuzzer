@@ -365,8 +365,13 @@ Transfer-Encoding: Chunked
         )
         return raw
 
-    def gen_body(self, form, boundary='------WebKitFormBoundary3xCzmJioizRcn0t4'):
+    def gen_body(self, form, filename='', ct='', boundary='------WebKitFormBoundary3xCzmJioizRcn0t4'):
         # 构造请求体
+        if filename == '':
+            filename = self.p_filename
+        if ct == '':
+            ct = self.p_ct
+
         body = \
             """
 {boundary}
@@ -379,8 +384,8 @@ Content-Type: {ct}
 {boundary}""".format(
                 boundary=boundary,
                 field=self.args.field,
-                filename=self.p_filename,
-                ct=self.p_ct,
+                filename=filename,
+                ct=ct,
                 data=open(self.p_file, 'rb').read(),   # 文件内容
                 form=form
             )
