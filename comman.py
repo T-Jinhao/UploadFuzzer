@@ -90,6 +90,7 @@ class Comman:
             result = self.comparaUrls(initUrls, urls)            # 结果对比
             if result > 0:
                 return True
+        print(yellow('[ Warn ]') + cyan('没有找出上传路径'))
         print()
         return False
 
