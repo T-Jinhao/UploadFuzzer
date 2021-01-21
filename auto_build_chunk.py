@@ -35,8 +35,6 @@ def chunk_data(data, keywords: list):
     ret += "0\r\n\r\n"
     return ret
 
-def gen_body():
-    pass
 
 # hack = HackRequests.hackRequests()
 #

