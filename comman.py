@@ -5,6 +5,8 @@
 import requests
 import re
 import os
+import random
+import string
 from color_output import *
 from urllib.parse import urljoin
 
@@ -88,6 +90,7 @@ class Comman:
             result = self.comparaUrls(initUrls, urls)            # 结果对比
             if result > 0:
                 return True
+        print()
         return False
 
     def extractUrls(self, text):
@@ -136,6 +139,14 @@ class Comman:
         else:  # 拼凑相对地址，转换成绝对地址
             u = urljoin(self.initUrl, u)
             return u
+
+    def getRandomStr(self, length=8):
+        # 生成随机字符串
+        ran_str = ''
+        for _ in range(length):
+            ran_str += random.choice(string.ascii_letters + string.digits)
+        return ran_str
+
 
     def getFilename(self, file):
         # 获取文件名

