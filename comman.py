@@ -38,7 +38,7 @@ class Comman:
                 timeout=5
             )
             print(blue('[ upload ]') + fuchsia('状态码:') + green(r.status_code))
-            if r.status_code == 200:
+            if r.status_code not in [404, 502, 403]:
                 return r.text
         except Exception as e:
             print(yellow('[ Warn ]') + e)
